@@ -1,0 +1,23 @@
+{
+  "name": "ogsprite-api",
+  "version": "1.0.0",
+  "description": "OgSprite Cloudflare Workers API",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240512.0",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.57.0"
+  }
+}
