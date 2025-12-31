@@ -9,7 +9,7 @@ export default {
       colors: {
         'brand': {
           'cream': '#FDFBF7',
-          'accent': '#FF7A00',
+          'accent': '#1574FF',
         }
       },
       backgroundImage: {
