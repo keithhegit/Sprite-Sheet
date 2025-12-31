@@ -23,6 +23,7 @@ interface UnifiedResultStepProps {
   onRegenerate: (actionId: string) => void;
   regeneratingActionId: string | null;
   onReset: () => void;
+  showRegenerate?: boolean;
 }
 
 const UnifiedResultStep: React.FC<UnifiedResultStepProps> = ({
@@ -33,6 +34,7 @@ const UnifiedResultStep: React.FC<UnifiedResultStepProps> = ({
   onRegenerate,
   regeneratingActionId,
   onReset,
+  showRegenerate = true,
 }) => {
   const [fps, setFps] = useState(8);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -268,23 +270,25 @@ const UnifiedResultStep: React.FC<UnifiedResultStepProps> = ({
               </button>
             </div>
 
-            <button
-              onClick={() => onRegenerate(activeResult.actionId)}
-              disabled={regeneratingActionId === activeResult.actionId}
-              className="w-full py-3 mt-2 bg-brand-accent text-white font-bold rounded-2xl shadow-lg shadow-brand-accent/20 hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed btn-bounce"
-            >
-              {regeneratingActionId === activeResult.actionId ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  正在重新生成...
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={18} />
-                  重新生成该动作
-                </>
-              )}
-            </button>
+            {showRegenerate && (
+              <button
+                onClick={() => onRegenerate(activeResult.actionId)}
+                disabled={regeneratingActionId === activeResult.actionId}
+                className="w-full py-3 mt-2 bg-brand-accent text-white font-bold rounded-2xl shadow-lg shadow-brand-accent/20 hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed btn-bounce"
+              >
+                {regeneratingActionId === activeResult.actionId ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    正在重新生成...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={18} />
+                    重新生成该动作
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

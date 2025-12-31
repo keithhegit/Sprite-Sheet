@@ -5,6 +5,7 @@ import GeneratorPage from './components/GeneratorPage';
 import HistoryPage from './components/history/HistoryPage';
 import SettingsPage from './components/settings/SettingsPage';
 import LoginPage from './components/auth/LoginPage';
+import FramePreviewPage from './components/preview/FramePreviewPage';
 import { useUserStore } from './stores/userStore';
 
 // 路由保护组件
@@ -70,6 +71,14 @@ const AppContent: React.FC = () => {
               <SettingsPage />
             </ProtectedRoute>
           } 
+        />
+        <Route
+          path="/frame-preview"
+          element={
+            <ProtectedRoute>
+              <FramePreviewPage />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </div>

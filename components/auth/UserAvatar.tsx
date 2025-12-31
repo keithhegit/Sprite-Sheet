@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { History, Settings, LogOut, LogIn } from 'lucide-react';
+import { History, Settings, LogOut, LogIn, Film } from 'lucide-react';
 import { useUserStore } from '../../stores/userStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -68,6 +68,16 @@ const UserAvatar: React.FC = () => {
 
           {/* 菜单项 */}
           <div className="py-2">
+            <button
+              onClick={() => {
+                navigate('/frame-preview');
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Film size={18} className="text-gray-400" />
+              序列帧预览
+            </button>
             <button
               onClick={() => {
                 navigate('/history');
