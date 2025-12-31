@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import GeneratorPage from './components/GeneratorPage';
 import HistoryPage from './components/history/HistoryPage';
@@ -7,28 +7,70 @@ import SettingsPage from './components/settings/SettingsPage';
 import LoginPage from './components/auth/LoginPage';
 import { useUserStore } from './stores/userStore';
 
-// 内部组件，用于条件渲染 Header
+// 路由保护组件
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const user = useUserStore((state) => state.user);
+  const initialized = useUserStore((state) => state.initialized);
+  const loading = useUserStore((state) => state.loading);
+
+  if (!initialized || loading) {
+    return (
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppContent: React.FC = () => {
   const location = useLocation();
-  // 使用选择器只订阅 fetchUser 和 initialized
   const fetchUser = useUserStore((state) => state.fetchUser);
   const initialized = useUserStore((state) => state.initialized);
   
-  // 登录页不显示 Header
-  const hideHeader = location.pathname === '/login';
+  useEffect(() => {
+    if (!initialized) {
+      fetchUser();
+    }
+  }, [initialized, fetchUser]);
 
-  // 已移除：在 index.tsx 中全局初始化用户状态，避免组件重绘导致死循环
-  // useEffect(() => { ... }, []);
+  const hideHeader = location.pathname === '/login';
 
   return (
     <div className="min-h-screen flex flex-col items-center pb-20">
       {!hideHeader && <Header />}
       
       <Routes>
-        <Route path="/" element={<GeneratorPage />} />
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <GeneratorPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route 
+          path="/history" 
+          element={
+            <ProtectedRoute>
+              <HistoryPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </div>
   );
