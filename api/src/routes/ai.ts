@@ -7,7 +7,8 @@ const ai = new Hono<{ Bindings: Env; Variables: { userId: string } }>();
 // 所有 AI 相关接口都需要认证
 ai.use('/*', authMiddleware);
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent';
 
 ai.post('/generate', async (c) => {
   const apiKey = c.env.GEMINI_API_KEY;
@@ -67,10 +68,11 @@ ai.post('/generate', async (c) => {
       3. **STRICTLY 16 FRAMES**: No more, no less.
     `;
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
         contents: [
@@ -78,8 +80,8 @@ ai.post('/generate', async (c) => {
             parts: [
               { text: prompt },
               {
-                inline_data: {
-                  mime_type: mimeType,
+                inlineData: {
+                  mimeType,
                   data: base64Data
                 }
               }
@@ -99,8 +101,9 @@ ai.post('/generate', async (c) => {
       const errorData = await response.json() as any;
       return c.json({ 
         error: 'Gemini API error', 
-        details: errorData.error?.message || response.statusText 
-      }, response.status);
+        details: errorData.error?.message || response.statusText,
+        upstreamStatus: response.status,
+      }, 502);
     }
 
     const data = await response.json() as any;
