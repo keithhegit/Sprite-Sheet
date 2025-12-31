@@ -3,7 +3,7 @@ import UserAvatar from './auth/UserAvatar';
 
 const Header: React.FC = () => {
   return (
-    <header className="flex justify-between items-center py-4 px-8 max-w-7xl mx-auto w-full relative gap-6">
+    <header className="flex justify-between items-center py-4 px-4 max-w-5xl mx-auto w-full relative gap-6">
       <div className="flex items-center flex-1 min-w-0">
         <a href="/" className="flex items-center hover:opacity-90 transition-opacity w-full min-w-0">
           <img 
