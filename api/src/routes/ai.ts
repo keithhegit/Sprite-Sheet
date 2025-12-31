@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { GoogleGenAI } from "@google/genai";
 import { Env } from '../types';
 import { authMiddleware } from '../middleware/auth';
 
@@ -8,7 +7,7 @@ const ai = new Hono<{ Bindings: Env; Variables: { userId: string } }>();
 // 所有 AI 相关接口都需要认证
 ai.use('/*', authMiddleware);
 
-const GEMINI_MODEL = 'gemini-3-pro-image-preview';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 ai.post('/generate', async (c) => {
   const apiKey = c.env.GEMINI_API_KEY;
@@ -24,10 +23,8 @@ ai.post('/generate', async (c) => {
       customPrompt?: string;
     }>();
 
-    const genAI = new GoogleGenAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-
     const base64Data = body.image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+    const mimeType = body.image.match(/^data:(image\/(png|jpeg|jpg|webp));base64,/)?.[1] || 'image/png';
 
     const actionMap: Record<string, string> = {
       'run': 'running cycle. Body leans forward slightly. Legs (if exist) move dynamically. If floating, body bobs forward.',
@@ -70,21 +67,47 @@ ai.post('/generate', async (c) => {
       3. **STRICTLY 16 FRAMES**: No more, no less.
     `;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "image/png"
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          topK: 32,
+          topP: 1,
+          maxOutputTokens: 2048,
         }
-      }
-    ]);
+      })
+    });
 
-    const response = await result.response;
+    if (!response.ok) {
+      const errorData = await response.json() as any;
+      return c.json({ 
+        error: 'Gemini API error', 
+        details: errorData.error?.message || response.statusText 
+      }, response.status);
+    }
+
+    const data = await response.json() as any;
     
     // 提取生成的图片
     let generatedImageBase64 = '';
-    const parts = response.candidates?.[0]?.content?.parts || [];
+    const parts = data.candidates?.[0]?.content?.parts || [];
     
     for (const part of parts) {
       if (part.inlineData?.data) {
@@ -94,20 +117,17 @@ ai.post('/generate', async (c) => {
     }
 
     if (!generatedImageBase64) {
-      // 如果没有直接返回图片，尝试从文本中提取（某些模型版本可能不同）
-      const text = response.text();
-      // 这里可以根据实际情况增加更多的解析逻辑
-      return c.json({ error: 'No image data returned from Gemini', details: text }, 500);
+      return c.json({ error: 'No image data returned from Gemini', details: 'The model did not return an image part.' }, 500);
     }
-    
+
     return c.json({ 
       imageUrl: generatedImageBase64,
       promptUsed: prompt
     });
 
   } catch (error: any) {
-    console.error('Gemini generation error:', error);
-    return c.json({ error: error.message || 'Failed to generate content' }, 500);
+    console.error('AI Route Error:', error);
+    return c.json({ error: error.message || 'Internal Server Error' }, 500);
   }
 });
 
