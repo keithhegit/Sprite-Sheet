@@ -6,14 +6,13 @@ const Header: React.FC = () => {
   return (
     <header className="flex justify-between items-center py-6 px-8 max-w-7xl mx-auto w-full relative">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          {/* Logo icon simulation */}
-          <div className="w-10 h-10 bg-brand-accent rounded-xl flex items-center justify-center text-white font-bold relative shadow-lg shadow-brand-accent/20">
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-brand-cream"></span>
-            <span className="transform -rotate-12 text-xl">🔥</span>
-          </div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">OgSprite</h1>
-        </div>
+        <a href="/" className="flex items-center hover:opacity-90 transition-opacity">
+          <img 
+            src="https://pub-c98d5902eedf42f6a9765dfad981fd88.r2.dev/page%E4%B8%93%E7%94%A8/ogsprite/og_sprite_sheet_banner.png" 
+            alt="OgSprite Logo" 
+            className="h-14 w-auto object-contain"
+          />
+        </a>
         
         <button className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50">
           <Globe size={14} />
