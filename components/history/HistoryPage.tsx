@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Trash2, Calendar, Image, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Calendar, Image, Loader2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { historyService, HistoryRecord } from '../../services/historyService';
 import { useUserStore } from '../../stores/userStore';
@@ -72,6 +72,15 @@ const HistoryPage: React.FC = () => {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+    });
+  };
+
+  const handlePreview = (recordId: string, actionId?: string) => {
+    navigate('/', {
+      state: {
+        previewHistoryId: recordId,
+        previewActionId: actionId,
+      },
     });
   };
 
@@ -154,6 +163,7 @@ const HistoryPage: React.FC = () => {
                             alt={sprite.actionLabel}
                             className="w-20 h-20 object-contain bg-gray-50 rounded-xl border border-gray-100 hover:border-brand-accent transition-colors cursor-pointer"
                             title={sprite.actionLabel}
+                            onClick={() => handlePreview(record.id, sprite.actionId)}
                           />
                           <p className="text-xs text-gray-600 mt-1 font-medium">
                             {sprite.actionLabel}
@@ -164,11 +174,19 @@ const HistoryPage: React.FC = () => {
                   </div>
 
                   {/* 操作 */}
-                  <div className="shrink-0 flex flex-col items-end justify-between">
+                  <div className="shrink-0 flex flex-col items-end justify-between gap-3">
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Calendar size={12} />
                       {formatDate(record.createdAt)}
                     </div>
+                    <button
+                      onClick={() => handlePreview(record.id, record.sprites[0]?.actionId)}
+                      className="px-4 py-2 bg-white border border-brand-accent text-brand-accent rounded-xl text-sm font-bold hover:bg-brand-accent/5 transition-all btn-bounce inline-flex items-center gap-2"
+                      title="预览"
+                    >
+                      <Eye size={16} />
+                      预览
+                    </button>
                     <button
                       onClick={() => handleDelete(record.id)}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -188,5 +206,4 @@ const HistoryPage: React.FC = () => {
 };
 
 export default HistoryPage;
-
 

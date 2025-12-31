@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Stepper from './Stepper';
 import UploadStep from './UploadStep';
 import AnalysisStep from './AnalysisStep';
@@ -11,7 +12,13 @@ import { useUserStore } from '../stores/userStore';
 import { uploadService } from '../services/uploadService';
 import { historyService } from '../services/historyService';
 
+type HistoryPreviewState = {
+  previewHistoryId?: string;
+  previewActionId?: string;
+};
+
 const GeneratorPage: React.FC = () => {
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.UPLOAD);
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [selectedActions, setSelectedActions] = useState<string[]>(['run']);
@@ -21,9 +28,59 @@ const GeneratorPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [regeneratingActionId, setRegeneratingActionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historyPreviewLoaded, setHistoryPreviewLoaded] = useState(false);
   
   // 使用选择器，只订阅 user 状态
   const user = useUserStore((state) => state.user);
+
+  useEffect(() => {
+    const state = (location.state || {}) as HistoryPreviewState;
+    if (historyPreviewLoaded) return;
+    if (!state.previewHistoryId) return;
+    if (!user) return;
+
+    const run = async () => {
+      try {
+        setError(null);
+        setIsGenerating(true);
+
+        const record = await historyService.getHistoryDetail(state.previewHistoryId!);
+        const originalUrl = historyService.getImageUrl(record.originalImageKey);
+        const spriteResults: SpriteResult[] = record.sprites.map((sprite) => ({
+          actionId: sprite.actionId,
+          actionLabel: sprite.actionLabel,
+          imageUrl: historyService.getImageUrl(sprite.spriteImageKey),
+          promptUsed: sprite.promptUsed || '',
+          activeFrames: Array(16).fill(true),
+          generatedAt: record.createdAt,
+        }));
+
+        const originalResp = await fetch(originalUrl, { credentials: 'include' });
+        if (!originalResp.ok) throw new Error('加载历史原图失败');
+        const blob = await originalResp.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('读取历史原图失败'));
+          reader.readAsDataURL(blob);
+        });
+
+        setUploadedImage(base64);
+        setResults(spriteResults);
+        setSelectedActions(spriteResults.map((r) => r.actionId));
+        setActiveResultId(state.previewActionId || spriteResults[0]?.actionId || '');
+        setCurrentStep(AppStep.RESULT);
+        setHistoryPreviewLoaded(true);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || '加载历史预览失败');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    run();
+  }, [historyPreviewLoaded, location.state, user]);
 
   const handleImageSelect = (base64: string) => {
     setUploadedImage(base64);
@@ -40,6 +97,7 @@ const GeneratorPage: React.FC = () => {
     setRegeneratingActionId(null);
     setCurrentStep(AppStep.UPLOAD);
     setError(null);
+    setHistoryPreviewLoaded(false);
   };
 
   const handleToggleAction = (actionId: string) => {
@@ -59,6 +117,11 @@ const GeneratorPage: React.FC = () => {
     return ACTION_OPTIONS.find((option) => option.id === actionId)?.label || '自定义';
   };
 
+  const extractActionFromPrompt = (prompt: string) => {
+    const match = prompt.match(/ACTION:\s*([^\r\n]+)/);
+    return match?.[1]?.trim() || '';
+  };
+
   const buildGenerationPayload = (actionId: string) => {
     const option = ACTION_OPTIONS.find((item) => item.id === actionId);
     const generationAction = option?.generationAction || actionId;
@@ -69,6 +132,14 @@ const GeneratorPage: React.FC = () => {
         promptOverride = customPrompt.trim();
       } else if (option?.customPrompt) {
         promptOverride = option.customPrompt;
+      }
+    }
+
+    if (generationAction === 'custom' && (!promptOverride || !promptOverride.trim())) {
+      const existing = results.find((r) => r.actionId === actionId);
+      const extracted = existing?.promptUsed ? extractActionFromPrompt(existing.promptUsed) : '';
+      if (extracted) {
+        promptOverride = extracted;
       }
     }
 
@@ -280,5 +351,4 @@ const GeneratorPage: React.FC = () => {
 };
 
 export default GeneratorPage;
-
 
