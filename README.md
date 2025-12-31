@@ -1,7 +1,6 @@
 # 🎭 OgSprite - AI 精灵图生成器
 
 <div align="center">
-  <img width="1200" height="auto" alt="OgSprite Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
   <p><em>基于 Google Gemini 的高性能像素艺术精灵图生成工具</em></p>
 </div>
 
