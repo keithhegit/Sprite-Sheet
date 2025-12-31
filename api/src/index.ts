@@ -3,6 +3,7 @@ import { Env } from './types';
 import { authRoutes } from './routes/auth';
 import { historyRoutes } from './routes/history';
 import { uploadRoutes } from './routes/upload';
+import aiRoutes from './routes/ai';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -47,7 +48,8 @@ app.use('*', async (c, next) => {
 
 app.route('/api/auth', authRoutes);
 app.route('/api/history', historyRoutes);
-app.route('/api', uploadRoutes); // upload 路由直接挂载到 /api，因为包含 /upload/* 和 /image/*
+app.route('/api/ai', aiRoutes);
+app.route('/api', uploadRoutes);
 
 // ==================================================================================
 // 健康检查

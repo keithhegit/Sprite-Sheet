@@ -4,6 +4,7 @@ export interface Env {
   JWT_SECRET: string;
   FRONTEND_URL?: string;
   R2_PREFIX?: string;
+  GEMINI_API_KEY?: string;
 }
 
 export interface User {
